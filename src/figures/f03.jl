@@ -18,7 +18,7 @@ function plot_gf_dual(dfl, dfr)
     p1 = plot(dfl, x = :gf, y = :N, color = :Color, Geom.step,
         Theme(plot_padding=[0mm, 10mm, 2mm, 2mm]), 
         Guide.xlabel("Apparent Growth Factor (-)"),
-        Guide.ylabel("Number concentration (cm⁻³)", orientation = :vertical),
+        Guide.ylabel("Concentration (cm⁻³)", orientation = :vertical),
         Guide.xticks(ticks = collect(0.8:0.1:2.5)),
         Guide.colorkey(title = ""),
         Scale.color_discrete_manual(colors...),
@@ -28,7 +28,7 @@ function plot_gf_dual(dfl, dfr)
     p2 = plot(dfr, x = :gf, y = :Frequency, color = :Color, Geom.step,
         Theme(plot_padding=[-8mm, 2mm, 2mm, 2mm]), 
         Guide.xlabel("Growth Factor (-)"),
-        Guide.ylabel("Frequency (-)", orientation = :vertical),
+        Guide.ylabel("Probability Density (-)", orientation = :vertical),
         Guide.xticks(ticks = collect(0.8:0.1:2.5)),
         Guide.colorkey(title = ""),
         Scale.color_discrete_manual(colors...),
@@ -45,7 +45,7 @@ Dd = 100e-9
 Nt = 3000.0
 k = 30
 seed = 1000
-gf0 = 1.6               
+gf0 = 1.6           
 
 Λ₁, Λ₂, δ₁, δ₂ = initializeDMAs(Dd, k)
 Ax = [[1300.0, 60.0, 1.4], [2000.0, 200.0, 1.6]]
@@ -53,7 +53,8 @@ Ax = [[1300.0, 60.0, 1.4], [2000.0, 200.0, 1.6]]
 gf, ge, 𝐀 = TDMAmatrix(𝕟ᶜⁿ, Dd, Λ₁, Λ₂, δ₂, k)
 model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 2.5, k));
 
-f = @> (0.7*pdf(Normal(1.3,0.1), gf) + pdf(Normal(1.7,0.25), gf)) normalize
+dg = ge[1:end-1] .- ge[2:end]
+f = @> (0.7*pdf(Normal(1.3,0.1), gf) + pdf(Normal(1.7,0.25), gf)) Normalize
 N0 = 𝐀*f
 N1 = poisson_noise(Qcpc, N0; seed = seed, t = 2.0)
 
@@ -64,12 +65,12 @@ e1 = @> sqrt.(sum((xλ1 .- f).^2.0)./k) round(digits = 3)
 xλ2 = invert(𝐀, N1, LₖDₓB(0, 0.001, lb, ub))
 e2 = @> sqrt.(sum((xλ2 .- f).^2.0)./k) round(digits = 3)
  
-dfl2 = DataFrame(gf = gf, Frequency = xλ2, Color = "L<sub>0</sub>D<sub>1e-3</sub>B<sub>[0,1]</sub>, $(e2)")
-dfl3 = DataFrame(gf = gf, Frequency = xλ1, Color = "L<sub>2</sub>x<sub>0</sub>B<sub>[0,1]</sub>, $(e1)")
+dfl2 = DataFrame(gf = gf, Frequency = xλ2 ./ dg, Color = "L<sub>0</sub>D<sub>1e-3</sub>B<sub>[0,1]</sub>, $(e2)")
+dfl3 = DataFrame(gf = gf, Frequency = xλ1 ./ dg, Color = "L<sub>2</sub>x<sub>0</sub>B<sub>[0,1]</sub>, $(e1)")
 
 dfr1 = DataFrame(gf = gf, N = N0, Color = "No noise")
 dfr2 = DataFrame(gf = gf, N = N1, Color = "Q = 1lpm")
-dfl1 = DataFrame(gf = gf, Frequency = f, Color = "Truth")
+dfl1 = DataFrame(gf = gf, Frequency = f ./ dg, Color = "Truth")
 
 p = plot_gf_dual([dfr1;dfr2], [dfl1; dfl2; dfl3]) 
 set_default_plot_size(18cm, 7cm)

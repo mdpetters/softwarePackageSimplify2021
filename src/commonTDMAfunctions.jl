@@ -4,9 +4,9 @@ function initializeDMAs(Dd, k)
 	t, p = 295.15, 1e5
 	qsa, qsh = 1.66e-5, 8.33e-5
 	r₁, r₂, l = 9.37e-3, 1.961e-2, 0.44369
-	Λ₁ = DMAconfig(t, p, qsa, qsh, r₁, r₂, l, 0.0, :-, 6, :cylindrical)
+	Λ₁ = DMAconfig(t, p, qsa, qsh, r₁, r₂, l, 160.0, :-, 6, :cylindrical)
     Λ₂ = DMAconfig(t, p, qsa, qsh, r₁, r₂, l, 0.0, :-, 6, :cylindrical)
-    δ₁ = setupDMA(Λ₁, dtoz(Λ₁, 500e-9), dtoz(Λ₁, 10e-9), 120)   
+    δ₁ = setupDMA(Λ₁, dtoz(Λ₁, 500e-9), dtoz(Λ₁, 8e-9), 120)   
 	δ₂ = setupDMA(Λ₂, dtoz(Λ₂, 2.5*Dd), dtoz(Λ₂, 0.8*Dd), k)
     Λ₁, Λ₂, δ₁, δ₂ 
 end
@@ -37,19 +37,21 @@ end
 Normalize(x) = x./sum(x)
 RMSE(x,y) = sqrt(sum((x .- y).^2.0)./length(x))
 
-function test_cases(case::String, gf, bins)
+function test_cases(case::String, gf, dg, bins)
 	f = @match case begin
 		"Bimodal"          => 0.7*pdf(Normal(1.3,0.07), gf) + pdf(Normal(1.7,0.2), gf)
 		"Truncated Normal" => pdf(truncated(Normal(1.2,0.2) , 1, 17), gf)
 		"Uniform"          => begin
 			j = argmin(abs.(gf .- 1.3))
 			i = argmin(abs.(gf .- 1.8))
-			@> zeros(bins) setindex!(ones(j-i+1), i:j)
+			a = @> zeros(bins) setindex!(ones(j-i+1), i:j)
+			a .* dg
 		end
 		"Single Channel"   => @> zeros(bins) setindex!(1.0, argmin(abs.(gf .- 1.6)))	
 		"Two Channel"      => begin
 			i = argmin(abs.(gf .- 1.6))
-			@> zeros(bins) setindex!([0.7, 0.3], [i,i - 3])
+			a = @> zeros(bins) setindex!([0.7, 0.3], [i,i - 3])
+			a .* dg
 		end
 	end
 	Normalize(f)
@@ -57,15 +59,15 @@ end
 
 function df_to_stack(mdf, Dlow, Dup)
     df = mdf[4:end, :]
-    Dp = convert(Vector, mdf[2, 5:end])
+    Dp = mdf[2, 5:end] |> Vector
     ii = [BitArray([0, 0, 0, 0]); (Dp .>= Dlow) .& (Dp .< Dup)]
-    Dl = convert(Vector, mdf[1, ii])
-    Dp = convert(Vector, mdf[2, ii])
-    Du = convert(Vector, mdf[3, ii])
+    Dl = mdf[1, ii] |> Vector
+    Dp = mdf[2, ii] |> Vector
+    Du = mdf[3, ii] |> Vector
 
     n = length(Dp)
     mapreduce(vcat, 1:length(df[!, 1])-1) do i
-        N = (convert(Vector, df[i, ii]))
+        N = df[i, ii] |> Vector
         DataFrame(
             x1 = df[i, :timeInt64],
             x2 = df[i+1, :timeInt64],

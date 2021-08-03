@@ -7,7 +7,6 @@ using Colors
 using Gadfly
 using Compose
 using MLStyle
-using ImmutableAssignmentStatements
 
 import Cairo, Fontconfig
 

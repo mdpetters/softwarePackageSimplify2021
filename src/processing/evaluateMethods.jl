@@ -44,7 +44,12 @@ function test_inv(seed, bins, Nt, Ddnm, TestCase)
     model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 2.5, bins));
 
     edf = DataFrame[]
-    f = test_cases(TestCase, gf, bins)
+	dg = ge[1:end-1] .- ge[2:end]
+    f = test_cases(TestCase, gf, ge, bins)
+	println(sum(f))
+	println(TestCase)
+	println(Dd)
+	println(bins)
     R = poisson_noise(1.0, 𝐀*f; seed = seed)
     x₀ = clean(R./sum(R))
     x₀[x₀ .>= 1] .= 0.999
@@ -53,11 +58,13 @@ function test_inv(seed, bins, Nt, Ddnm, TestCase)
 
     map(0:2) do k
         @>> begin
-            invert(𝐀, R, LₖB(k, lb, ub))
+  :q          invert(𝐀, R, LₖB(k, lb, ub))qq
             eval_error(f, "L$(k)B", TestCase, seed, Nt, Ddnm) 
             push!(edf)
         end
 	end
+
+	println("A")
 
     map(0:2) do k
         @>> begin
@@ -67,7 +74,9 @@ function test_inv(seed, bins, Nt, Ddnm, TestCase)
         end
 	end
     
-    map(0:2) do k
+	println("B")
+
+	map(0:2) do k
         @>> begin
             invert(𝐀, R, Lₖx₀B(k, x₀, lb, ub)) 
             eval_error(f, "L$(k)x₀B", TestCase, seed, Nt, Ddnm) 
@@ -75,7 +84,9 @@ function test_inv(seed, bins, Nt, Ddnm, TestCase)
         end
     end
 
-    map(0:2) do k
+	println("C")
+    
+	map(0:2) do k
         @>> begin
             invert(𝐀, R, Lₖx₀DₓB(k, x₀, 0.001, lb, ub)) 
             eval_error(f, "L$(k)x₀DₓB", TestCase, seed, Nt, Ddnm) 
@@ -89,7 +100,7 @@ end
 # Conditions for the cases
 seeds = collect(1000:1000:10000)
 bins = collect(20:10:60)
-Dd = [20, 50, 100, 200, 300]
+Dd = [30, 50, 100, 200, 300]
 Nt = [500, 1000, 5000, 50000]
 phantom = ["Single Channel", "Two Channel", "Uniform", "Bimodal", "Truncated Normal"]
 
@@ -99,7 +110,13 @@ df = let
 end
 
 mdf = @showprogress map(1:length(df[!,1])) do i
-    test_inv(df[i,:s], df[i,:bins], df[i,:Nt], df[i,:Dd], df[i,:p])
+	a = try 
+	    test_inv(df[i,:s], df[i,:bins], df[i,:Nt], df[i,:Dd], df[i,:p])
+	catch
+		nothing
+	end
 end
 
-outdf = vcat(mdf...) |> CSV.write("../../data/processed/methodssummary.csv")
+gdf = filter(x -> .~isnothing(x), mdf)
+
+outdf = vcat(gdf...) |> CSV.write("../../data/processed/methodssummary.csv")
