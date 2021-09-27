@@ -7,7 +7,7 @@ function initializeDMAs(Dd, k)
 	Λ₁ = DMAconfig(t, p, qsa, qsh, r₁, r₂, l, 160.0, :-, 6, :cylindrical)
     Λ₂ = DMAconfig(t, p, qsa, qsh, r₁, r₂, l, 0.0, :-, 6, :cylindrical)
     δ₁ = setupDMA(Λ₁, dtoz(Λ₁, 500e-9), dtoz(Λ₁, 8e-9), 120)   
-	δ₂ = setupDMA(Λ₂, dtoz(Λ₂, 2.5*Dd), dtoz(Λ₂, 0.8*Dd), k)
+	δ₂ = setupDMA(Λ₂, dtoz(Λ₂, 5.0*Dd), dtoz(Λ₂, 0.8*Dd), k)
     Λ₁, Λ₂, δ₁, δ₂ 
 end
 
@@ -17,7 +17,7 @@ function TDMAmatrix(𝕟ᶜⁿ, Dd, Λ₁, Λ₂, δ₂, bins)
 	gf = δ₂.Dp./(Dd*1e9)
 
 	𝐀 = @>> begin
-		TDMA1Ddomainfunction(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 2.5, bins));
+		TDMA1Ddomainfunction(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 5.0, bins));
 	 	designmatrix(gf)
     end
     gf, ge, 𝐀

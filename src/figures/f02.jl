@@ -33,7 +33,7 @@ function plot_gf_dual(dfl, dfr)
         Guide.colorkey(title = ""),
         Scale.color_discrete_manual(colors...),
         Scale.x_continuous(labels = x -> x in xlabels ? @sprintf("%.1f", x) : ""),
-        Coord.cartesian())
+        Coord.cartesian(xmin = 0.8, xmax = 2.5))
 	
     hstack(p2,p1)
 end
@@ -42,7 +42,7 @@ include("../commonTDMAfunctions.jl")
 
 Dd = 100e-9
 Nt = 3000.0
-k = 30
+k = 60
 seed = 1000
 gf0 = 1.6               
 
@@ -50,7 +50,7 @@ gf0 = 1.6
 Ax = [[1300.0, 60.0, 1.4], [2000.0, 200.0, 1.6]]
 𝕟ᶜⁿ = DMALognormalDistribution(Ax, δ₁)
 gf, ge, 𝐀 = TDMAmatrix(𝕟ᶜⁿ, Dd, Λ₁, Λ₂, δ₂, k)
-model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 2.5, k));
+model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 5.0, k));
 
 dg = ge[1:end-1] .- ge[2:end]
 pop(val,gf0) = @> zeros(k) setindex!(val, argmin(abs.(gf .- gf0)))	

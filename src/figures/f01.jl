@@ -43,21 +43,20 @@ end
 
 function f01(Dd, k, gf0)
     Λ₁, Λ₂, δ₁, δ₂ = initializeDMAs(Dd, k)
-	O(k) = mapfoldl(zs -> (δ₂.Ω(Λ₂, δ₂.Z, zs, k) .* δ₂.Tl(Λ₂, δ₂.Z, k))', vcat, δ₂.Z)
+	O(k) = mapfoldl(zs -> (δ₂.Ω(Λ₂, δ₂.Z, zs / k, k) .* δ₂.Tl(Λ₂, δ₂.Z, k))', vcat, δ₂.Z)
 
     Ax = [[1300.0, 60.0, 1.4], [2000.0, 200.0, 1.6]]
     𝕟ᶜⁿ = DMALognormalDistribution(Ax, δ₁)
     gf, ge, 𝐀 = TDMAmatrix(𝕟ᶜⁿ, Dd, Λ₁, Λ₂, δ₂, k)
 	dg = ge[1:end - 1] .- ge[2:end]
     f = @> zeros(k) setindex!(1.0, argmin(abs.(gf .- gf0)))	
-    model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 2.5, k));
+    model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 5.0, k));
     𝕣 = model(𝕟ᶜⁿ, f, Dd, gf) 
     dfl1 = DataFrame(gf=𝕣.Dp ./ (Dd * 1e9), N=clean(𝕣.N), Color=["model" for i in 𝕣.N])
     dfl2 = DataFrame(gf=gf, N=𝐀 * f, Color=["𝐁*P<sub>g</sub>" for i in gf])
 
     T₁(zˢ, k) = δ₁.Ω(Λ₁, δ₁.Z, zˢ / k, k) .* δ₁.Tc(k, δ₁.Dp) .* δ₁.Tl(Λ₁, δ₁.Dp)
-	Π(Λ, δ, k) = (@_ map(ztod(Λ, 1, _), dtoz(Λ, k, δ.Dp * 1e-9))) ./ δ.Dp
-	DMA₁(𝕟, zˢ, gf) = @_ map(Π(Λ₁, δ₁, _) ⋅ (gf ⋅ (T₁(zˢ, _) * 𝕟)), 1:6)
+	DMA₁(𝕟, zˢ, gf) = @_ map((gf ⋅ (T₁(zˢ, _) * 𝕟)), 1:6)
 	itp(𝕟) = interpolateSizeDistributionOntoδ((𝕟, δ₂))
 	DMA₂(𝕟, k) = O(k) * 𝕟
     
@@ -72,4 +71,4 @@ function f01(Dd, k, gf0)
 end
 
 set_default_plot_size(18cm, 7cm)
-@>> f01(100e-9, 60, 1.6) Gadfly.draw(SVG("figures/f01.svg"))
+@>> f01(100e-9, 120, 1.6) Gadfly.draw(SVG("figures/f01.svg"))

@@ -44,7 +44,7 @@ include("../commonTDMAfunctions.jl")
 Qcpc = 1.0 # Flow in LPM
 Dd = 100e-9
 Nt = 3000.0
-k = 30
+k = 60
 seed = 1000
 gf0 = 1.6               
 gf1 = 1.6               
@@ -53,7 +53,7 @@ gf1 = 1.6
 Ax = [[1300.0, 60.0, 1.4], [2000.0, 200.0, 1.6]]
 𝕟ᶜⁿ = DMALognormalDistribution(Ax, δ₁)
 gf, ge, 𝐀 = TDMAmatrix(𝕟ᶜⁿ, Dd, Λ₁, Λ₂, δ₂, k)
-model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 2.5, k));
+model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 5.0, k));
 
 dg = ge[1:end-1] .- ge[2:end]
 f = @> zeros(k) setindex!(1.0, argmin(abs.(gf .- gf0)))	

@@ -1,39 +1,40 @@
 # Script to evaluate the different inversion methods which are plotted in Figure S1
-# This script is slow (1 hr runtime)
+# This script is slow and was run in distributed on 48 processors/64 GB memory
 
-using DifferentialMobilityAnalyzers
-using Distributions
-using DataFrames
-using MLStyle
-using Lazy
-using Random
-using RegularizationTools
-using ProgressMeter
-using DataFrames
-using CSV
+using Distributed
 
-include("../commonTDMAfunctions.jl")
-
-""" function eval_error(x, Method, Phantom, Seed, Nt, Dd, xλ)
-    Return the RMSE as a DataFrame
-"""
-function eval_error(x, Method, Phantom, Seed, Nt, Dd, xλ)
-	RMSE = sqrt(sum((xλ .- x).^2.0)./length(x))
-	return DataFrame(
-		RMSE = RMSE, 
-		Method = Method, 
-		Phantom = Phantom, 
-        Seed = Seed,
-        Nt = Nt,
-        Dd = Dd,
-        bins = length(xλ)
-    )
+@everywhere begin
+	import Pkg
+	Pkg.activate(".")
 end
 
-""" test_inv(seed, bins, Nt, Ddnm, TestCase)
-    Simulates the the inversion for a given TestCase
-"""
-function test_inv(seed, bins, Nt, Ddnm, TestCase)
+@everywhere using DifferentialMobilityAnalyzers
+@everywhere using Distributions
+@everywhere using DataFrames
+@everywhere using MLStyle
+@everywhere using Lazy
+@everywhere using Random
+@everywhere using RegularizationTools
+@everywhere using ProgressMeter
+@everywhere using DataFrames
+@everywhere using CSV
+
+@everywhere include("../commonTDMAfunctions.jl")
+
+@everywhere function eval_error(x, Method, Phantom, Seed, Nt, Dd, xλ)
+		RMSE = sqrt(sum((xλ .- x).^2.0)./length(x))
+		return DataFrame(
+			RMSE = RMSE, 
+			Method = Method, 
+			Phantom = Phantom, 
+	        Seed = Seed,
+	        Nt = Nt,
+	        Dd = Dd,
+	        bins = length(xλ)
+	    )
+end
+
+@everywhere function test_inv(seed, bins, Nt, Ddnm, TestCase)
     Qcpc = 1.0 
     Dd = Ddnm*1e-9   
 
@@ -41,11 +42,12 @@ function test_inv(seed, bins, Nt, Ddnm, TestCase)
     Ax = [[0.66*Nt, 50.0, 1.4], [0.33*Nt, 130.0, 1.6]]
     𝕟ᶜⁿ = DMALognormalDistribution(Ax, δ₁)
     gf, ge, 𝐀 = TDMAmatrix(𝕟ᶜⁿ, Dd, Λ₁, Λ₂, δ₂, bins)
-    model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 2.5, bins));
+    model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 5.0, bins));
 
     edf = DataFrame[]
 	dg = ge[1:end-1] .- ge[2:end]
-    f = test_cases(TestCase, gf, ge, bins)
+    f = test_cases(TestCase, gf, dg, bins)
+	println("")
 	println(sum(f))
 	println(TestCase)
 	println(Dd)
@@ -58,7 +60,7 @@ function test_inv(seed, bins, Nt, Ddnm, TestCase)
 
     map(0:2) do k
         @>> begin
-  :q          invert(𝐀, R, LₖB(k, lb, ub))qq
+            invert(𝐀, R, LₖB(k, lb, ub))
             eval_error(f, "L$(k)B", TestCase, seed, Nt, Ddnm) 
             push!(edf)
         end
@@ -99,7 +101,7 @@ end
 
 # Conditions for the cases
 seeds = collect(1000:1000:10000)
-bins = collect(20:10:60)
+bins = collect(20:20:100) 
 Dd = [30, 50, 100, 200, 300]
 Nt = [500, 1000, 5000, 50000]
 phantom = ["Single Channel", "Two Channel", "Uniform", "Bimodal", "Truncated Normal"]
@@ -109,7 +111,8 @@ df = let
     vcat(a...)
 end
 
-mdf = @showprogress map(1:length(df[!,1])) do i
+mdf = @showprogress pmap(1:length(df[!,1])) do i
+	GC.gc()
 	a = try 
 	    test_inv(df[i,:s], df[i,:bins], df[i,:Nt], df[i,:Dd], df[i,:p])
 	catch

@@ -87,13 +87,13 @@ end
 function prepInversion(i)
 	Dd = htdma.Dd[i]*1e-9
 	n = length(htdma.Dp[:,i])
-	δ₂ = setupDMA(Λ₂, dtoz(Λ₂, 2.5*Dd), dtoz(Λ₂, 0.8*Dd), bins)
+	δ₂ = setupDMA(Λ₂, dtoz(Λ₂, 5.0*Dd), dtoz(Λ₂, 0.8*Dd), bins)
 
     j = argmin(abs.(smps.timestamp .- htdma.timestamp[i]))
     𝕟ᶜⁿ = interpolateSizeDistributionOntoδ((smps.𝕟[j],δ₁))
 
     gf, ge, 𝐀 = TDMAmatrix(𝕟ᶜⁿ, Dd, Λ₁, Λ₂, δ₂, bins)
-    model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 2.5, bins));
+    model = TDMA1Dpdf(𝕟ᶜⁿ, Λ₁, Λ₂, (Dd, 0.8, 5.0, bins));
     
  	itp1 = interpolate((htdma.gf[:,i],), htdma.N[:,i], Gridded(Linear()))
  	etp = extrapolate(itp1, 0.0) 
@@ -211,7 +211,7 @@ const lpm = 1.6666666e-5
 Λ₁, δ₁ = getDMA(298, 950e2, 0.63lpm, 5lpm, 0.0, "Brechtel")
 Λ₂     = getDMA2(298, 950e2, 1lpm, 5lpm, 0.0, "Brechtel")
 
-bins = 30
+bins = 60
 hardbound = true
 
 # Run through several days. This is a bit of a hack and should be automated. 

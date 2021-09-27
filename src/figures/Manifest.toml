@@ -34,10 +34,10 @@ version = "1.0.0"
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[BenchmarkTools]]
-deps = ["JSON", "Logging", "Printf", "Statistics", "UUIDs"]
-git-tree-sha1 = "ffabdf5297c9038973a0a3724132aa269f38c448"
+deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
+git-tree-sha1 = "61adeb0823084487000600ef8b1c00cc2474cd47"
 uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-version = "1.1.0"
+version = "1.2.0"
 
 [[Blosc]]
 deps = ["Blosc_jll"]
@@ -200,9 +200,7 @@ version = "1.0.2"
 
 [[DifferentialMobilityAnalyzers]]
 deps = ["BenchmarkTools", "CSV", "Calculus", "DataFrames", "Distributions", "Interpolations", "Lazy", "LinearAlgebra", "MLStyle", "Memoize", "Random", "RegularizationTools", "SpecialFunctions", "Test", "Underscores"]
-git-tree-sha1 = "bf1fb875c3bb139845dd1bed71c0808bb2ae340a"
-repo-rev = "master"
-repo-url = "git@github.com:mdpetters/DifferentialMobilityAnalyzers.jl.git"
+path = "/home/petters/Documents/Research/Public/DifferentialMobilityAnalyzers.jl/"
 uuid = "050a7be8-18f9-52d6-bdba-0a194485d082"
 version = "2.5.5"
 
@@ -555,9 +553,9 @@ version = "0.9.2"
 
 [[MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
-git-tree-sha1 = "c253236b0ed414624b083e6b72bfe891fbd2c7af"
+git-tree-sha1 = "5455aef09b40e5020e1520f551fa3135040d4ed0"
 uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
-version = "2021.1.1+1"
+version = "2021.1.1+2"
 
 [[MLStyle]]
 git-tree-sha1 = "594e189325f66e23a8818e5beb11c43bb0141bcd"
